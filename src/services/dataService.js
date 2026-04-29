@@ -25,8 +25,21 @@ async function getConfig() {
 
 async function saveConfig(config) {
 	await ensureDataFile();
-	await fs.writeFile(DATA_FILE, JSON.stringify(config, null, 2), "utf-8");
-	return config;
+	const sanitized = {
+		devices: Array.isArray(config.devices)
+			? config.devices.map((device) => ({
+				...device,
+				tags: Array.isArray(device.tags)
+					? device.tags.map((tag) => {
+							const { unit, currentValue, ...rest } = tag;
+							return rest;
+						})
+					: []
+			}))
+			: []
+	};
+	await fs.writeFile(DATA_FILE, JSON.stringify(sanitized, null, 2), "utf-8");
+	return sanitized;
 }
 
 module.exports = {

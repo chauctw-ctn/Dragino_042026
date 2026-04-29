@@ -26,9 +26,7 @@
           "type": "int16",
           "scale": 0.1,
           "offset": 0,
-          "unit": "",
-          "currentValue": 210.70000000000002,
-          "decimals": 1
+          "decimals": 0
         },
         {
           "id": "tag_1777449719864_562",
@@ -39,8 +37,6 @@
           "type": "int16",
           "scale": 0.1,
           "offset": 0,
-          "unit": "",
-          "currentValue": 50.1,
           "decimals": 2
         }
       ]
