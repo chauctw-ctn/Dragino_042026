@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Modbus TCP Tag Config</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="modbus-config.css" />
+  </head>
+  <body>
+    <div class="bg-orbit"></div>
+    <div class="bg-grid"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">MB</div>
+        <div>
+          <h1>Modbus TCP Tag Config</h1>
+          <p>UI cau hinh tag dong cho thiet bi Modbus TCP</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn ghost" id="reloadBtn">Tai lai</button>
+        <button class="btn" id="saveBtn">Luu cau hinh</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel device-list">
+        <div class="panel-header">
+          <h2>Thiet bi</h2>
+          <button class="btn small" id="addDeviceBtn">+ Them thiet bi</button>
+        </div>
+        <ul id="deviceItems" class="device-items"></ul>
+      </section>
+
+      <section class="panel device-editor">
+        <div class="panel-header">
+          <div>
+            <h2>Chi tiet thiet bi</h2>
+            <p class="muted">Chon thiet bi ben trai de chinh sua</p>
+          </div>
+          <button class="btn danger small" id="removeDeviceBtn" disabled>Xoa thiet bi</button>
+        </div>
+
+        <div class="form-grid" id="deviceForm">
+          <div class="field">
+            <label for="deviceName">Ten thiet bi</label>
+            <input id="deviceName" type="text" placeholder="Flow Meter 1" />
+          </div>
+          <div class="field">
+            <label for="deviceEnabled">Trang thai</label>
+            <select id="deviceEnabled">
+              <option value="true">Bat</option>
+              <option value="false">Tat</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="deviceHost">Host</label>
+            <input id="deviceHost" type="text" placeholder="192.168.1.100" />
+          </div>
+          <div class="field">
+            <label for="devicePort">Port</label>
+            <input id="devicePort" type="number" min="1" max="65535" placeholder="502" />
+          </div>
+          <div class="field">
+            <label for="deviceUnit">Unit ID</label>
+            <input id="deviceUnit" type="number" min="1" max="247" placeholder="1" />
+          </div>
+          <div class="field">
+            <label for="deviceInterval">Polling (ms)</label>
+            <input id="deviceInterval" type="number" min="100" step="100" placeholder="60000" />
+          </div>
+          <div class="field">
+            <label for="deviceByteOrder">Byte order</label>
+            <select id="deviceByteOrder"></select>
+          </div>
+          <div class="field">
+            <label for="deviceWordOrder">Word order</label>
+            <select id="deviceWordOrder"></select>
+          </div>
+        </div>
+
+        <div class="panel-subheader">
+          <h3>Tags</h3>
+          <div class="tag-actions">
+            <button class="btn ghost small" id="addTagBtn">+ Them tag</button>
+            <button class="btn ghost small" id="importJsonBtn">Nhap JSON</button>
+            <button class="btn ghost small" id="exportJsonBtn">Xuat JSON</button>
+          </div>
+        </div>
+
+        <div class="tags-wrapper">
+          <table class="tags-table">
+            <thead>
+              <tr>
+                <th>Ten</th>
+                <th>FC</th>
+                <th>Addr</th>
+                <th>Len</th>
+                <th>Type</th>
+                <th>Scale</th>
+                <th>Offset</th>
+                <th>Unit</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tagRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <dialog class="json-dialog" id="jsonDialog">
+      <div class="dialog-header">
+        <h3>Nhap / xuat JSON tag</h3>
+        <button class="btn ghost small" id="closeDialogBtn">Dong</button>
+      </div>
+      <textarea id="jsonTextarea" spellcheck="false"></textarea>
+      <div class="dialog-actions">
+        <button class="btn ghost" id="loadJsonBtn">Nap vao tag</button>
+        <button class="btn" id="copyJsonBtn">Copy JSON</button>
+      </div>
+    </dialog>
+
+    <script src="modbus-config.js"></script>
+  </body>
+</html>
