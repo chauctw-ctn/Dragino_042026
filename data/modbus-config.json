@@ -1,3 +1,49 @@
 {
-  "devices": []
+  "devices": [
+    {
+      "id": "dev_1777448890576_299",
+      "name": "UPS",
+      "enabled": true,
+      "connection": {
+        "host": "192.168.1.12",
+        "port": 504,
+        "unitId": 1
+      },
+      "protocol": {
+        "byteOrder": "BIG_ENDIAN",
+        "wordOrder": "BIG_ENDIAN"
+      },
+      "polling": {
+        "interval": 60000
+      },
+      "tags": [
+        {
+          "id": "tag_1777448970256_994",
+          "name": "Volt_In",
+          "functionCode": 3,
+          "address": 170,
+          "length": 1,
+          "type": "int16",
+          "scale": 0.1,
+          "offset": 0,
+          "unit": "",
+          "currentValue": 210.70000000000002,
+          "decimals": 1
+        },
+        {
+          "id": "tag_1777449719864_562",
+          "name": "Freq_In",
+          "functionCode": 3,
+          "address": 171,
+          "length": 1,
+          "type": "int16",
+          "scale": 0.1,
+          "offset": 0,
+          "unit": "",
+          "currentValue": 50.1,
+          "decimals": 2
+        }
+      ]
+    }
+  ]
 }

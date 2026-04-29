@@ -1,5 +1,6 @@
 const express = require("express");
 const { getConfig, saveConfig } = require("../services/dataService");
+const { readDeviceValues } = require("../modbus/modbusClient");
 const { ENUMS } = require("../models/data.model");
 
 const router = express.Router();
@@ -42,6 +43,21 @@ router.put("/config", async (req, res) => {
 		res.json(saved);
 	} catch (err) {
 		res.status(500).json({ error: "Failed to save config" });
+	}
+});
+
+router.get("/devices/:id/values", async (req, res) => {
+	try {
+		const config = await getConfig();
+		const device = config.devices.find((item) => item.id === req.params.id);
+		if (!device) {
+			res.status(404).json({ error: "Device not found" });
+			return;
+		}
+		const values = await readDeviceValues(device);
+		res.json({ deviceId: device.id, values });
+	} catch (err) {
+		res.status(500).json({ error: "Failed to read device values" });
 	}
 });
 

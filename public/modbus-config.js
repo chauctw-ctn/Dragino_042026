@@ -4,6 +4,9 @@ const state = {
   selectedIndex: -1
 };
 
+let valuePoller = null;
+let valuePollingDeviceId = null;
+
 const elements = {
   deviceItems: document.getElementById("deviceItems"),
   addDeviceBtn: document.getElementById("addDeviceBtn"),
@@ -95,8 +98,25 @@ function createTag() {
     type: state.enums.dataType[0],
     scale: 1,
     offset: 0,
-    unit: ""
+    decimals: 0
   };
+}
+
+function formatNumberWithDecimals(value, decimals) {
+  const safeDecimals = Number.isFinite(decimals) ? Math.max(0, decimals) : 0;
+  if (typeof value !== "number" || Number.isNaN(value)) return String(value);
+  return value.toFixed(safeDecimals);
+}
+
+function formatTagValue(tag) {
+  const decimals = Number(tag?.decimals || 0);
+  if (tag && tag.currentValue !== undefined && tag.currentValue !== null) {
+    return formatNumberWithDecimals(tag.currentValue, decimals);
+  }
+  if (tag && tag.value !== undefined && tag.value !== null) {
+    return formatNumberWithDecimals(tag.value, decimals);
+  }
+  return "-";
 }
 
 function renderDeviceList() {
@@ -188,17 +208,94 @@ function renderTags(tags) {
       </td>
       <td><input type="number" value="${tag.scale}" data-field="scale" step="0.1" /></td>
       <td><input type="number" value="${tag.offset}" data-field="offset" step="0.1" /></td>
-      <td><input type="text" value="${tag.unit || ""}" data-field="unit" /></td>
+      <td><input type="number" value="${Number(tag.decimals || 0)}" data-field="decimals" min="0" max="8" /></td>
+      <td><span class="tag-value" data-tag-id="${tag.id}">${formatTagValue(tag)}</span></td>
       <td><button class="btn ghost small" data-action="remove">X</button></td>
     `;
     elements.tagRows.appendChild(row);
   });
 }
 
+function stopValuePolling() {
+  if (valuePoller) {
+    clearInterval(valuePoller);
+  }
+  valuePoller = null;
+  valuePollingDeviceId = null;
+}
+
+function startValuePolling() {
+  if (state.selectedIndex < 0) {
+    stopValuePolling();
+    return;
+  }
+  const device = state.config.devices[state.selectedIndex];
+  if (!device || !device.id) {
+    stopValuePolling();
+    return;
+  }
+
+  const interval = Math.max(500, Number(device.polling?.interval || 0) || 1000);
+  if (valuePoller && valuePollingDeviceId === device.id) {
+    clearInterval(valuePoller);
+  }
+  valuePollingDeviceId = device.id;
+  valuePoller = setInterval(() => refreshTagValues(device.id), interval);
+  refreshTagValues(device.id);
+}
+
+function applyTagValues(values) {
+  if (!Array.isArray(values) || state.selectedIndex < 0) return;
+  const device = state.config.devices[state.selectedIndex];
+  if (!device) return;
+
+  if (values.length === 0) {
+    device.tags.forEach((tag) => {
+      tag.currentValue = null;
+    });
+    elements.tagRows.querySelectorAll(".tag-value").forEach((cell) => {
+      cell.textContent = "-";
+    });
+    return;
+  }
+
+  const valueMap = new Map(values.map((entry) => [entry.tagId, entry.value]));
+  device.tags.forEach((tag) => {
+    if (valueMap.has(tag.id)) {
+      tag.currentValue = valueMap.get(tag.id);
+    }
+  });
+
+  elements.tagRows.querySelectorAll(".tag-value").forEach((cell) => {
+    const tagId = cell.dataset.tagId;
+    if (!tagId) return;
+    if (!valueMap.has(tagId)) return;
+    const value = valueMap.get(tagId);
+    if (value === undefined || value === null) {
+      cell.textContent = "-";
+      return;
+    }
+    const tag = device.tags.find((item) => item.id === tagId);
+    cell.textContent = tag ? formatTagValue(tag) : String(value);
+  });
+}
+
+async function refreshTagValues(deviceId) {
+  if (!deviceId) return;
+  try {
+    const payload = await fetchJson(`/api/devices/${deviceId}/values`);
+    const values = Array.isArray(payload) ? payload : payload.values;
+    applyTagValues(values || []);
+  } catch (err) {
+    // Avoid spamming errors in UI during polling failures.
+  }
+}
+
 function selectDevice(index) {
   state.selectedIndex = index;
   renderDeviceList();
   fillDeviceForm(state.config.devices[index]);
+  startValuePolling();
 }
 
 function updateSelectedDevice(patch) {
@@ -251,6 +348,7 @@ function bindFormEvents() {
         interval: Number(event.target.value || 0)
       }
     });
+    startValuePolling();
   });
 
   elements.deviceByteOrder.addEventListener("change", (event) => {
@@ -288,6 +386,8 @@ function bindFormEvents() {
       nextTag[field] = Number(event.target.value || 0);
     } else if (["scale", "offset"].includes(field)) {
       nextTag[field] = Number(event.target.value || 0);
+    } else if (field === "decimals") {
+      nextTag[field] = Math.max(0, Math.floor(Number(event.target.value || 0)));
     } else {
       nextTag[field] = event.target.value;
     }
@@ -318,6 +418,7 @@ async function loadInitial() {
     state.selectedIndex = state.config.devices.length ? 0 : -1;
     renderDeviceList();
     fillDeviceForm(state.config.devices[state.selectedIndex]);
+    startValuePolling();
   } catch (err) {
     showToast("Khong the tai du lieu", true);
   }
@@ -355,6 +456,7 @@ function bindButtons() {
     state.selectedIndex = state.config.devices.length ? 0 : -1;
     renderDeviceList();
     fillDeviceForm(state.config.devices[state.selectedIndex]);
+    startValuePolling();
   });
 
   elements.addTagBtn.addEventListener("click", () => {
